@@ -57,4 +57,37 @@ codeunit 80105 "Field Validation Mgt."
 
         exit(false);
     end;
+
+    procedure CheckCustomerField(Customer: Record Customer; xCustomer: Record Customer): Boolean
+    begin
+        if Customer.Name <> xCustomer.Name then
+            exit(true);
+        if Customer."Name 2" <> xCustomer."Name 2" then
+            exit(true);
+        if Customer.Address <> xCustomer.Address then
+            exit(true);
+        if Customer."Address 2" <> xCustomer."Address 2" then
+            exit(true);
+        if Customer.City <> xCustomer.City then
+            exit(true);
+        if Customer.County <> xCustomer.County then
+            exit(true);
+        if Customer."Post Code" <> xCustomer."Post Code" then
+            exit(true);
+        if Customer."Country/Region Code" <> xCustomer."Country/Region Code" then
+            exit(true);
+        if Customer."Phone No." <> xCustomer."Phone No." then
+            exit(true);
+        if Customer."E-Mail" <> xCustomer."E-Mail" then
+            exit(true);
+        if Customer.Contact <> xCustomer.Contact then
+            exit(true);
+        if Customer."Currency Code" <> xCustomer."Currency Code" then
+            exit(true);
+        if Customer."Payment Terms Code" <> xCustomer."Payment Terms Code" then
+            exit(true);
+        if Customer.Blocked <> xCustomer.Blocked then
+            exit(true);
+        exit(false);
+    end;
 }

@@ -27,25 +27,26 @@ codeunit 80120 "NuOrder Customer Buffer Mgt."
     local procedure Customer_OnAfterModify(var Rec: Record Customer; var xRec: Record Customer; RunTrigger: Boolean)
     var
         Mgt: Codeunit "NuOrder Customer Buffer Mgt.";
+        FieldValidation: Codeunit "Field Validation Mgt.";
     begin
-        if not HasRelevantFieldChanged(Rec, xRec) then
+        if not FieldValidation.CheckCustomerField(Rec, xRec) then
             exit;
         Mgt.EnqueueCustomer(Rec."No.");
     end;
 
-    local procedure HasRelevantFieldChanged(Rec: Record Customer; xRec: Record Customer): Boolean
+    [EventSubscriber(ObjectType::Table, Database::"Ship-to Address", OnAfterInsertEvent, '', false, false)]
+    local procedure ShipToAddress_OnAfterInsert(var Rec: Record "Ship-to Address"; RunTrigger: Boolean)
+    var
+        Mgt: Codeunit "NuOrder Customer Buffer Mgt.";
     begin
-        if Rec.Name <> xRec.Name then exit(true);
-        if Rec."Name 2" <> xRec."Name 2" then exit(true);
-        if Rec.Address <> xRec.Address then exit(true);
-        if Rec."Address 2" <> xRec."Address 2" then exit(true);
-        if Rec.City <> xRec.City then exit(true);
-        if Rec.County <> xRec.County then exit(true);
-        if Rec."Post Code" <> xRec."Post Code" then exit(true);
-        if Rec."Country/Region Code" <> xRec."Country/Region Code" then exit(true);
-        if Rec."Phone No." <> xRec."Phone No." then exit(true);
-        if Rec."E-Mail" <> xRec."E-Mail" then exit(true);
-        if Rec.Contact <> xRec.Contact then exit(true);
-        exit(false);
+        Mgt.EnqueueCustomer(Rec."Customer No.");
+    end;
+
+    [EventSubscriber(ObjectType::Table, Database::"Ship-to Address", OnAfterModifyEvent, '', false, false)]
+    local procedure ShipToAddress_OnAfterModify(var Rec: Record "Ship-to Address"; var xRec: Record "Ship-to Address"; RunTrigger: Boolean)
+    var
+        Mgt: Codeunit "NuOrder Customer Buffer Mgt.";
+    begin
+        Mgt.EnqueueCustomer(Rec."Customer No.");
     end;
 }

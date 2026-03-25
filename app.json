@@ -1,0 +1,39 @@
+{
+  "id": "1cf4eca6-3784-413e-8295-2ad9844ee6c6",
+  "name": "Ganca",
+  "publisher": "On Traget",
+  "version": "1.0.0.2",
+  "brief": "",
+  "description": "",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "dependencies": [
+      {
+        "name": "K3 Pebblestone",
+        "id": "78b99d35-c19d-4ff1-bfbd-24dedd0cc8a9",
+        "publisher": "K3 Business Technology Group",
+        "version": "1.0.0.0"
+      }
+  ],
+  "screenshots": [],
+  "platform": "1.0.0.0",
+  "application": "25.0.0.0",
+  "idRanges": [
+    {
+      "from": 80100,
+      "to": 80149
+    }
+  ],
+  "resourceExposurePolicy": {
+    "allowDebugging": true,
+    "allowDownloadingSource": false,
+    "includeSourceInSymbolFile": false
+  },
+  "runtime": "14.0",
+  "features": [
+    "NoImplicitWith"
+  ]
+}

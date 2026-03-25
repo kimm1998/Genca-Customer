@@ -68,6 +68,10 @@ table 80100 "NuORDER Setup"
         {
             DataClassification = ToBeClassified;
         }
+        field(104; "Customer API URL"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys

@@ -99,6 +99,10 @@ page 80100 "NuORDER Setup"
                 {
                     ApplicationArea = all;
                 }
+                field("Customer API URL"; Rec."Customer API URL")
+                {
+                    ApplicationArea = all;
+                }
             }
         }
     }

@@ -152,6 +152,16 @@ codeunit 80100 "NuORDER Auth Mgt"
         exit(Url);
     end;
 
+    procedure GetCustomerURL(): Text
+    var
+        Setup: Record "NuORDER Setup";
+        Url: Text;
+    begin
+        Setup.Get();
+        Url := ParseURL(StrSubstNo(GetBaseUrlSafe(Setup), Setup.Env), Setup."Customer API URL");
+        exit(Url);
+    end;
+
     // ============================
     // POSTMAN-STYLE HEADER CREATION
     // ============================

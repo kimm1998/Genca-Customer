@@ -72,6 +72,10 @@ table 80100 "NuORDER Setup"
         {
             DataClassification = ToBeClassified;
         }
+        field(105; "Price Sheet API URL"; Text[50])
+        {
+            DataClassification = ToBeClassified;
+        }
     }
 
     keys

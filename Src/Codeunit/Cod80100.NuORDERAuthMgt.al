@@ -162,6 +162,16 @@ codeunit 80100 "NuORDER Auth Mgt"
         exit(Url);
     end;
 
+    procedure GetPriceSheetURL(): Text
+    var
+        Setup: Record "NuORDER Setup";
+        Url: Text;
+    begin
+        Setup.Get();
+        Url := ParseURL(StrSubstNo(GetBaseUrlSafe(Setup), Setup.Env), Setup."Price Sheet API URL");
+        exit(Url);
+    end;
+
     // ============================
     // POSTMAN-STYLE HEADER CREATION
     // ============================

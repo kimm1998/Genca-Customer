@@ -103,6 +103,10 @@ page 80100 "NuORDER Setup"
                 {
                     ApplicationArea = all;
                 }
+                field("Price Sheet API URL"; Rec."Price Sheet API URL")
+                {
+                    ApplicationArea = all;
+                }
             }
         }
     }

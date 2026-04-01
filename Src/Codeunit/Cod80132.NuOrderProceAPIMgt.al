@@ -44,6 +44,10 @@ codeunit 80132 "NuOrder Price API Mgt."
         Setup.Get();
         Setup.TestField(Enabled, true);
 
+        // Clear cache before processing
+        Clear(ProductIdCache);
+        Clear(ProductDataCache);
+
         // Build payload with resolved product IDs
         PayloadTxt := BuildPayloadWithResolvedIds(TemplateCode);
         if PayloadTxt = '' then
@@ -80,10 +84,97 @@ codeunit 80132 "NuOrder Price API Mgt."
             MarkTemplateAsError(TemplateCode, Format(Response.HttpStatusCode()), RespTxt);
     end;
 
-    local procedure BuildPayloadWithResolvedIds(TemplateCode: Code[20]): Text
+    /// <summary>
+    /// Builds the price sheet payload for export/preview without calling NuOrder API.
+    /// Uses the buffer data to construct the JSON but does not resolve product IDs from API.
+    /// </summary>
+    procedure BuildPayloadForExport(TemplateCode: Code[20]): Text
     var
         Buffer: Record "NuOrder Price Buffer";
-        PayloadMgt: Codeunit "NuOrder Price Payload Mgt.";
+        Item: Record Item;
+        Root: JsonObject;
+        PricingArr: JsonArray;
+        PricingObj: JsonObject;
+        SizesArr: JsonArray;
+        LastGroupKey: Text;
+        GroupKey: Text;
+        CurrentItemNo: Code[20];
+        CurrentColor: Code[20];
+        CurrentSeason: Code[20];
+        CurrentCurrency: Code[10];
+        PayloadTxt: Text;
+        BrandId: Text;
+        ProductId: Text;
+        ProductColor: Text;
+        ProductSeason: Text;
+    begin
+        Buffer.SetRange("Price List Code", TemplateCode);
+        Buffer.SetCurrentKey("Price List Code", "Item No.", "Color Code", "Season Code", "Currency Code");
+        if not Buffer.FindSet() then
+            exit('');
+
+        LastGroupKey := '';
+        repeat
+            GroupKey := StrSubstNo('%1|%2|%3|%4', Buffer."Item No.", Buffer."Color Code", Buffer."Season Code", Buffer."Currency Code");
+            if GroupKey <> LastGroupKey then begin
+                if LastGroupKey <> '' then begin
+                    PricingObj.Add('sizes', SizesArr);
+                    PricingArr.Add(PricingObj);
+                end;
+
+                Clear(PricingObj);
+                Clear(SizesArr);
+
+                CurrentItemNo := Buffer."Item No.";
+                CurrentColor := Buffer."Color Code";
+                CurrentSeason := Buffer."Season Code";
+                CurrentCurrency := Buffer."Currency Code";
+
+                // Build brand_id for reference
+                BrandId := StrSubstNo('%1_%2', CurrentItemNo, CurrentColor);
+                ResolveProductFromApi(BrandId, ProductId, ProductColor, ProductSeason);
+
+                PricingObj.Add('_id', ProductId);
+
+                // For export, use placeholder for _id (will be resolved at sync time)
+                // PricingObj.Add('_id', StrSubstNo('<resolved from API using brand_id: %1>', BrandId));
+                PricingObj.Add('style_number', CurrentItemNo);
+                PricingObj.Add('season', CurrentSeason);
+                PricingObj.Add('color', CurrentColor);
+                PricingObj.Add('template', TemplateCode);
+                PricingObj.Add('wholesale', 0);
+                PricingObj.Add('retail', 0);
+                PricingObj.Add('disabled', false);
+
+                // Add sizes for this group
+                AddSizesForGroup(SizesArr, TemplateCode, CurrentItemNo, CurrentColor, CurrentCurrency);
+
+                LastGroupKey := GroupKey;
+            end;
+        until Buffer.Next() = 0;
+
+        if LastGroupKey <> '' then begin
+            PricingObj.Add('sizes', SizesArr);
+            PricingArr.Add(PricingObj);
+        end;
+
+        Root.Add('currency_code', CurrentCurrency);
+        Root.Add('pricing', PricingArr);
+        Root.WriteTo(PayloadTxt);
+
+        // Format JSON for readability
+        PayloadTxt := FormatJsonPretty(PayloadTxt);
+
+        exit(PayloadTxt);
+    end;
+
+    /// <summary>
+    /// Builds the price sheet payload with resolved product IDs from NuOrder API.
+    /// This calls the product API for each unique brand_id to get the _id.
+    /// </summary>
+    procedure BuildPayloadWithResolvedIds(TemplateCode: Code[20]): Text
+    var
+        Buffer: Record "NuOrder Price Buffer";
         Root: JsonObject;
         PricingArr: JsonArray;
         PricingObj: JsonObject;
@@ -242,7 +333,7 @@ codeunit 80132 "NuOrder Price API Mgt."
     begin
         Setup.Get();
         BaseUrl := StrSubstNo(Setup."Base URL", Setup.Env);
-        exit(BaseUrl.TrimEnd('/') + '/api/product/external_id/' + BrandId);
+        exit(BaseUrl.TrimEnd('/') + '/product/external_id/' + BrandId);
     end;
 
     local procedure AddSizesForGroup(var SizesArr: JsonArray; PriceListCode: Code[20]; ItemNo: Code[20]; ColorCode: Code[20]; CurrencyCode: Code[10])
@@ -277,6 +368,18 @@ codeunit 80132 "NuOrder Price API Mgt."
                     ProcessedSizes.Add(ItemVariant."K3PFSize Code", true);
                 end;
             until ItemVariant.Next() = 0;
+    end;
+
+    local procedure FormatJsonPretty(JsonTxt: Text): Text
+    var
+        JObj: JsonObject;
+        FormattedTxt: Text;
+    begin
+        if not JObj.ReadFrom(JsonTxt) then
+            exit(JsonTxt);
+
+        JObj.WriteTo(FormattedTxt);
+        exit(FormattedTxt);
     end;
 
     local procedure MarkTemplateAsSynced(TemplateCode: Code[20]; HttpStatus: Text; ResponseTxt: Text)

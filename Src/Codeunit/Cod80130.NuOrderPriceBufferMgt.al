@@ -4,7 +4,6 @@ codeunit 80130 "NuOrder Price Buffer Mgt."
     var
         ItemVariant: Record "Item Variant";
         Item: Record Item;
-        Buffer: Record "NuOrder Price Buffer";
         Header: Record "Price List Header";
     begin
         if PriceListLine."Asset Type" <> PriceListLine."Asset Type"::Item then
@@ -85,16 +84,4 @@ codeunit 80130 "NuOrder Price Buffer Mgt."
     begin
         EnqueueFromPriceListLine(Rec);
     end;
-
-    // [EventSubscriber(ObjectType::Table, Database::"Item Variant", OnAfterInsertEvent, '', false, false)]
-    // local procedure ItemVariant_OnAfterInsert(var Rec: Record "Item Variant"; RunTrigger: Boolean)
-    // begin
-    //     EnqueueFromItemVariant(Rec);
-    // end;
-
-    // [EventSubscriber(ObjectType::Table, Database::"Item Variant", OnAfterModifyEvent, '', false, false)]
-    // local procedure ItemVariant_OnAfterModify(var Rec: Record "Item Variant"; var xRec: Record "Item Variant"; RunTrigger: Boolean)
-    // begin
-    //     EnqueueFromItemVariant(Rec);
-    // end;
 }

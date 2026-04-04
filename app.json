@@ -16,6 +16,12 @@
         "id": "78b99d35-c19d-4ff1-bfbd-24dedd0cc8a9",
         "publisher": "K3 Business Technology Group",
         "version": "1.0.0.0"
+      },
+      {
+        "name": "CreatechGankaExt",
+        "id": "ec8a68db-2f6a-4326-8222-5b64bca804dc",
+        "publisher": "Createch",
+        "version": "1.0.0.0"
       }
   ],
   "screenshots": [],

@@ -1,80 +1,93 @@
 codeunit 80104 "NuOrder Product Payload Mgt."
 {
 
-    procedure BuildCreateOrUpdateProductPayload(Buffer: Record "NuOrder Product Buffer") PayloadTxt: Text
-    var
-        Payload: JsonObject;
-        Item: Record Item;
-        Color: Record "K3PF Color";
-        Season: Record "K3PF Season";
-        SizesArr: JsonArray;
-        BannersArr: JsonArray;
-        SizeGroupsArr: JsonArray;
-        SeasonsArr: JsonArray;
-        PricingObj: JsonObject;
-        ColorTxt: Text;
-        SeasonTxt: Text;
-        ProductName: Text;
-        ProductDescription: Text;
-        BrandId: Text;
-        UniqueKey: Text;
-        SalesUOM: Text;
-        BrandText: Text;
-        weavingText: Text;
-        finishText: Text;
-    begin
-        if not Item.Get(Buffer."Item No.") then
-            Error('Item %1 was not found.', Buffer."Item No.");
+    procedure BuildCreateOrUpdateProductPayload(Buffer: Record "NuOrder Product Buffer"; Setup: Record "NuORDER Environment Setup") PayloadTxt: Text
+var
+    Payload: JsonObject;
+    Item: Record Item;
+    Color: Record "K3PF Color";
+    Season: Record "K3PF Season";
+    SizesArr: JsonArray;
+    BannersArr: JsonArray;
+    SizeGroupsArr: JsonArray;
+    SeasonsArr: JsonArray;
+    PricingObj: JsonObject;
+    ColorTxt: Text;
+    SeasonTxt: Text;
+    ProductName: Text;
+    ProductDescription: Text;
+    BrandId: Text;
+    UniqueKey: Text;
+    SalesUOM: Text;
+    BrandText: Text;
+    weavingText: Text;
+    finishText: Text;
+    activeBoolean: Boolean;
+    archivedBoolean: Boolean;
+    CategoryTxt: Text;
+    SubcategoryTxt: Text;
+    DivisionTxt: Text;
+begin
+    if not Item.Get(Buffer."Item No.") then
+        Error('Item %1 was not found.', Buffer."Item No.");
 
-        Color.SetRange("Code", Buffer."Color Code");
-        if not Color.FindFirst() then
-            Error('Color %1 was not found.', Buffer."Color Code");
+    Color.SetRange("Code", Buffer."Color Code");
+    if not Color.FindFirst() then
+        Error('Color %1 was not found.', Buffer."Color Code");
 
-        if not Season.Get(Buffer."Season Code") then
-            Error('Season %1 was not found.', Buffer."Season Code");
+    if not Season.Get(Buffer."Season Code") then
+        Error('Season %1 was not found.', Buffer."Season Code");
 
-        ColorTxt := GetColorText_EN(Color, Buffer);
-        SeasonTxt := GetSeasonText(Season, Buffer);
-        ProductName := GetProductName(Item);
-        ProductDescription := GetProductDescription(Item);
-        BrandId := StrSubstNo('%1_%2', Buffer."Item No.", Buffer."Color Code");
-        UniqueKey := StrSubstNo('%1,%2,%3', Buffer."Item No.", SeasonTxt, ColorTxt);
-        SalesUOM := GetSalesUOM(Item);
-        BrandText := GetBrandText(Item);
-        weavingText := GetWeavingText(Item);
-        finishText := GetFinishText(Item);
+    ColorTxt := GetColorText(Setup, Color, Buffer);
+    SeasonTxt := GetSeasonText(Season, Buffer);
+    ProductName := GetProductName(Setup, Item);
+    ProductDescription := GetProductDescription(Setup, Item);
+    BrandId := StrSubstNo('%1_%2', Buffer."Item No.", Buffer."Color Code");
+    UniqueKey := StrSubstNo('%1,%2,%3', Buffer."Item No.", SeasonTxt, ColorTxt);
+    SalesUOM := GetSalesUOM(Item);
+    BrandText := GetBrandText(Item);
+    weavingText := GetWeavingText(Item);
+    // finishText := GetFinishText(Item);
+    activeBoolean := (not Item.Blocked);
+    archivedBoolean := GetArchivedStatus(Item);
 
-        Payload.Add('style_number', Buffer."Item No.");
-        Payload.Add('season', SeasonTxt);
-        Payload.Add('color', ColorTxt);
-        Payload.Add('name', ProductName);
-        Payload.Add('brand_id', BrandId);
-        Payload.Add('unique_key', UniqueKey);
+    CategoryTxt := Item."NuORDER Category";
+    SubcategoryTxt := Item."NuORDER Subcategory";
+    DivisionTxt := Item."NuORDER Division";
 
-        Payload.add('sales_unit_of_measure', SalesUOM);
-        Payload.Add('brands', BrandText);
-        Payload.Add('weaving', weavingText);
-        Payload.Add('customer', finishText);
+    Payload.Add('style_number', Buffer."Item No.");
+    Payload.Add('season', SeasonTxt);
+    Payload.Add('color', ColorTxt);
+    Payload.Add('name', ProductName);
+    Payload.Add('brand_id', BrandId);
+    Payload.Add('unique_key', UniqueKey);
 
-        // // TODO: Map this from NuORDER schema setup / product schema configuration.
-        // Payload.Add('schema_id', '__TODO__');
+    Payload.Add('sales_unit_of_measure', SalesUOM);
+    Payload.Add('brands', BrandText);
+    Payload.Add('weaving', weavingText);
+    // Payload.Add('customer', finishText);
+    Payload.Add('active', activeBoolean);
+    Payload.Add('archived', archivedBoolean);
 
-        SizesArr := BuildSizesArray(Buffer);
-        Payload.Add('sizes', SizesArr);
+    Payload.Add('category', CategoryTxt);
+    Payload.Add('subcategory', SubcategoryTxt);
+    Payload.Add('division', DivisionTxt);
 
+    SizesArr := BuildSizesArray(Buffer);
+    Payload.Add('sizes', SizesArr);
 
-        Payload.Add('description', ProductDescription);
+    Payload.Add('description', ProductDescription);
 
-        // TODO: Map actual product-level pricing and currencies.
-        // PricingObj := BuildRootPricingObject();
-        Payload.Add('pricing', PricingObj);
+    // TODO: Map actual product-level pricing and currencies.
+    // PricingObj := BuildRootPricingObject();
+    Payload.Add('pricing', PricingObj);
 
-        // Seasons
-        SeasonsArr.Add(SeasonTxt);
-        Payload.Add('seasons', SeasonsArr);
+    // Seasons
+    SeasonsArr.Add(SeasonTxt);
+    Payload.Add('seasons', SeasonsArr);
 
-        Payload.WriteTo(PayloadTxt);
-    end;
+    Payload.WriteTo(PayloadTxt);
+end;
 
     local procedure BuildSizesArray(Buffer: Record "NuOrder Product Buffer"): JsonArray
     var
@@ -133,12 +146,18 @@ codeunit 80104 "NuOrder Product Payload Mgt."
         exit(PricingObj);
     end;
 
-    local procedure GetColorText_EN(Color: Record "K3PF Color"; Buffer: Record "NuOrder Product Buffer"): Text
+    local procedure GetColorText(Setup: Record "NuORDER Environment Setup"; Color: Record "K3PF Color"; Buffer: Record "NuOrder Product Buffer"): Text
+    var
+        Translation: Record "K3PF Color Translation";
     begin
-        if Color.Description <> '' then
-            exit(UpperCase(Color."External Description"));
+        if Setup.Language <> '' then begin
+            Translation.SetRange("Code", Buffer."Color Code");
+            Translation.SetRange("Language Code", Setup.Language);
+            if Translation.FindFirst() then
+                exit(Translation.Description);
+        end;
+        exit(Color.Description);
 
-        exit(Buffer."Color Code");
     end;
 
     local procedure GetSeasonText(Season: Record "K3PF Season"; Buffer: Record "NuOrder Product Buffer"): Text
@@ -146,27 +165,28 @@ codeunit 80104 "NuOrder Product Payload Mgt."
         exit(Buffer."Season Code");
     end;
 
-    local procedure GetProductName(Item: Record Item): Text
+    local procedure GetProductName(Setup: Record "NuORDER Environment Setup"; Item: Record Item): Text
+    var
+        ItemTranslation: Record "Item Translation";
     begin
-        if Item.Description <> '' then
-            exit(Item.Description);
-
-        exit(Item."No.");
+        if Setup.Language <> '' then begin
+            ItemTranslation.SetRange("Item No.", Item."No.");
+            ItemTranslation.SetRange("Language Code", Setup.Language);
+            if ItemTranslation.FindFirst() then
+                exit(ItemTranslation.Description);
+        end;
+        exit(Item.Description)
     end;
 
-    local procedure GetProductDescription(Item: Record Item): Text
+    local procedure GetProductDescription(Setup: Record "NuORDER Environment Setup"; Item: Record Item): Text
     var
         DescriptionTxt: Text;
     begin
         DescriptionTxt := Item.Description;
-
-        if Item."Description 2" <> '' then begin
-            if DescriptionTxt = '' then
-                DescriptionTxt := Item."Description 2"
-            else
-                DescriptionTxt += ' ' + Item."Description 2";
-        end;
-
+        if Setup.Language in ['', 'FRC'] then
+            DescriptionTxt := Item.GetCrtDescriptionlongueFRC();
+        if Setup.Language = 'ENC' then
+            DescriptionTxt := Item.GetCrtDescriptionlongueENC();
         exit(DescriptionTxt);
     end;
 
@@ -204,5 +224,12 @@ codeunit 80104 "NuOrder Product Payload Mgt."
             exit(UpperCase(FinishRec.Description));
 
         exit('');
+    end;
+
+    local procedure GetArchivedStatus(Item: Record Item): Boolean
+    begin
+        if Item."K3PFItem Phase Code" = 'PRÊT POUR VENTE' then
+            exit(false);
+        exit(true);
     end;
 }

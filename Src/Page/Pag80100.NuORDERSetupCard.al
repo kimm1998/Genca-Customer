@@ -1,15 +1,9 @@
-page 80100 "NuORDER Setup"
+page 80100 "NuORDER Setup Card"
 {
     PageType = Card;
-    SourceTable = "NuORDER Setup";
-    Caption = 'NuORDER Setup';
-    UsageCategory = Administration;
+    SourceTable = "NuORDER Environment Setup";
+    Caption = 'NuORDER Environment Setup';
     ApplicationArea = All;
-    InsertAllowed = false;
-    DeleteAllowed = false;
-
-
-    AccessByPermission = tabledata "NuORDER Setup" = RIMD;
 
     layout
     {
@@ -17,6 +11,11 @@ page 80100 "NuORDER Setup"
         {
             group(General)
             {
+                field(Code; Rec.Code)
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Code field.';
+                }
                 field(Enabled; Rec.Enabled)
                 {
                     ApplicationArea = All;
@@ -28,6 +27,11 @@ page 80100 "NuORDER Setup"
                     Editable = false;
                     ToolTip = 'Specifies the value of the Auth Status field.';
                 }
+                field(Language; Rec.Language)
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Specifies the value of the Language field.';
+                }
                 // field("Last Handshake At"; Rec."Last Handshake At") { ApplicationArea = All; Editable = false; }
             }
 
@@ -35,7 +39,7 @@ page 80100 "NuORDER Setup"
             {
                 Caption = 'Authorization';
 
-                field(env; Rec.Env)
+                field(env; Rec.Environment)
                 {
                     ApplicationArea = All;
                     ToolTip = 'Specifies the value of the Env field.';
@@ -87,25 +91,34 @@ page 80100 "NuORDER Setup"
                     ApplicationArea = all;
                     ToolTip = 'Specifies the value of the Base URL field.';
                 }
-                field("Initiate URL"; Rec."Initiate URL")
-                {
-                    ApplicationArea = all;
-                }
-                field("Token URL"; Rec."Token URL")
-                {
-                    ApplicationArea = all;
-                }
-                field("Product API URL"; Rec."Product API URL")
-                {
-                    ApplicationArea = all;
-                }
-                field("Customer API URL"; Rec."Customer API URL")
+
+                field("Last Order Sync Date"; Rec."Last Order Sync Date")
                 {
                     ApplicationArea = all;
                 }
                 field("Price Sheet API URL"; Rec."Price Sheet API URL")
                 {
                     ApplicationArea = all;
+                }
+            }
+            group(SyncOptions)
+            {
+                Caption = 'Sync Options';
+
+                field("Enable Order Sync"; Rec."Enable Order Sync")
+                {
+                    ApplicationArea = all;
+                    ToolTip = 'If enabled, orders will be synced from NuORDER to Business Central.';
+                }
+                field("Enable Product Sync"; Rec."Enable Product Sync")
+                {
+                    ApplicationArea = all;
+                    ToolTip = 'If enabled, products will be synced from NuORDER to Business Central.';
+                }
+                field("Enable Customer Sync"; Rec."Enable Customer Sync")
+                {
+                    ApplicationArea = all;
+                    ToolTip = 'If enabled, customers will be synced from NuORDER to Business Central.';
                 }
             }
         }
@@ -196,8 +209,4 @@ page 80100 "NuORDER Setup"
         }
     }
 
-    trigger OnOpenPage()
-    begin
-        Rec.EnsureSingleRecord();
-    end;
 }

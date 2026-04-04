@@ -28,55 +28,53 @@ codeunit 80132 "NuOrder Price API Mgt."
 
     procedure ProcessTemplate(TemplateCode: Code[20])
     var
-        Setup: Record "NuORDER Setup";
+        Setup: Record "NuORDER Environment Setup";
         AuthMgt: Codeunit "NuORDER Auth Mgt";
         Client: HttpClient;
         Request: HttpRequestMessage;
         Response: HttpResponseMessage;
         Content: HttpContent;
-        ContentHeaders: HttpHeaders;
         RequestHeaders: HttpHeaders;
+        ContentHeaders: HttpHeaders;
         Url: Text;
         PayloadTxt: Text;
         RespTxt: Text;
         AuthorizationHeader: Text;
     begin
-        Setup.Get();
+        Setup.Get('SANBOX EN');
         Setup.TestField(Enabled, true);
 
-        // Clear cache before processing
         Clear(ProductIdCache);
         Clear(ProductDataCache);
 
-        // Build payload with resolved product IDs
         PayloadTxt := BuildPayloadWithResolvedIds(TemplateCode);
         if PayloadTxt = '' then
             exit;
 
-        // Build URL: https://{env}.nuorder.com/api/pricesheet/{template}
         Url := AuthMgt.GetPriceSheetURL() + '/' + TemplateCode;
 
-        // Get OAuth authorization header
-        AuthorizationHeader := AuthMgt.GetApiAuthorizationHeader(Setup, 'POST', Url);
+        // EXACT pattern from Cod80106:
+        AuthorizationHeader := AuthMgt.GetApiAuthorizationHeader(Setup, 'put', Url);
 
         Content.WriteFrom(PayloadTxt);
         Content.GetHeaders(ContentHeaders);
-        if ContentHeaders.Contains('Content-Type') then
-            ContentHeaders.Remove('Content-Type');
+        ContentHeaders.Remove('Content-Type');
         ContentHeaders.Add('Content-Type', 'application/json');
 
-        Request.Method := 'POST';
         Request.SetRequestUri(Url);
+        Request.Method := 'PUT';
         Request.Content := Content;
 
         Request.GetHeaders(RequestHeaders);
         RequestHeaders.Add('Authorization', AuthorizationHeader);
         RequestHeaders.Add('Accept', 'application/json');
 
-        if not Client.Send(Request, Response) then
-            Error('NuORDER pricesheet call failed.');
+        Client.Send(Request, Response);
+        Response.Content().ReadAs(RespTxt);
 
-        Response.Content.ReadAs(RespTxt);
+        if not Response.IsSuccessStatusCode() then
+            Error('NuORDER pricesheet failed.\Status Code: %1\Response: %2\Template: %3',
+                Response.HttpStatusCode(), RespTxt, TemplateCode);
 
         if Response.IsSuccessStatusCode() then
             MarkTemplateAsSynced(TemplateCode, Format(Response.HttpStatusCode()), RespTxt)
@@ -247,7 +245,7 @@ codeunit 80132 "NuOrder Price API Mgt."
 
     local procedure ResolveProductFromApi(BrandId: Text; var ProductId: Text; var ProductColor: Text; var ProductSeason: Text)
     var
-        Setup: Record "NuORDER Setup";
+        Setup: Record "NuORDER Environment Setup";
         AuthMgt: Codeunit "NuORDER Auth Mgt";
         Client: HttpClient;
         Request: HttpRequestMessage;
@@ -273,7 +271,7 @@ codeunit 80132 "NuOrder Price API Mgt."
             exit;
         end;
 
-        Setup.Get();
+        Setup.Get('SANBOX EN');
         Setup.TestField(Enabled, true);
 
         // Build URL: https://{env}.nuorder.com/api/product/external_id/{brand_id}
@@ -327,12 +325,12 @@ codeunit 80132 "NuOrder Price API Mgt."
 
     local procedure GetProductExternalIdUrl(BrandId: Text): Text
     var
-        Setup: Record "NuORDER Setup";
+        Setup: Record "NuORDER Environment Setup";
         AuthMgt: Codeunit "NuORDER Auth Mgt";
         BaseUrl: Text;
     begin
-        Setup.Get();
-        BaseUrl := StrSubstNo(Setup."Base URL", Setup.Env);
+        Setup.Get('SANBOX EN');
+        BaseUrl := StrSubstNo(Setup."Base URL", Setup.Environment);
         exit(BaseUrl.TrimEnd('/') + '/product/external_id/' + BrandId);
     end;
 

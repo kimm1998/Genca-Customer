@@ -12,7 +12,7 @@ table 80120 "NuOrder Customer Buffer"
             TableRelation = Customer."No.";
         }
 
-        field(2; "Status"; enum "NuOrder Integration Status")
+        field(2; "Status"; enum "NuOrder Integration Status")//TODO : to remove
         {
             Caption = 'Status';
         }

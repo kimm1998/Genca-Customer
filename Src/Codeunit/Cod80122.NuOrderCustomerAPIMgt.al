@@ -1,5 +1,12 @@
 codeunit 80122 "NuOrder Customer API Mgt."
 {
+    trigger OnRun()
+    var
+        myInt: Integer;
+    begin
+        ProcessAllBufferedEntries();
+    end;
+
     procedure ProcessAllBufferedEntries()
     var
         Buffer: Record "NuOrder Customer Buffer";
@@ -22,7 +29,7 @@ codeunit 80122 "NuOrder Customer API Mgt."
     [TryFunction]
     procedure PushCreateOrUpdateCustomer(Buffer: Record "NuOrder Customer Buffer"; var ResponseTxt: Text)
     var
-        Setup: Record "NuORDER Setup";
+        Setup: Record "NuORDER Environment Setup";
         AuthMgt: Codeunit "NuORDER Auth Mgt";
         PayloadMgt: Codeunit "NuOrder Customer Payload Mgt.";
         Client: HttpClient;

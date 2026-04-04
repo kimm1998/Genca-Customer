@@ -13,6 +13,10 @@ page 80103 "NuOrder Product Buffer"
             repeater(Control1)
             {
 
+                field("Environment Code"; Rec."Environment Code")
+                {
+                    ToolTip = 'Specifies the value of the Environment Code field.', Comment = '%';
+                }
                 field("Item No."; Rec."Item No.")
                 {
                     ToolTip = 'Specifies the value of the Item No. field.', Comment = '%';
@@ -72,12 +76,18 @@ page 80103 "NuOrder Product Buffer"
         InStr: InStream;
         PayloadTxt: Text;
         FileName: Text;
+        Setup: Record "NuORDER Environment Setup";
     begin
         Rec.TestField("Item No.");
         Rec.TestField("Color Code");
         Rec.TestField("Season Code");
+        if not Setup.Get(Rec."Environment Code") then
+            Error('NuORDER Setup was not found.');
+        Setup.TestField("Auth Status", Setup."Auth Status"::Connected);
+        Setup.TestField("Enable Product Sync", true);
+        Setup.TestField(Enabled, true);
 
-        PayloadTxt := PayloadMgt.BuildCreateOrUpdateProductPayload(Rec);
+        PayloadTxt := PayloadMgt.BuildCreateOrUpdateProductPayload(Rec, Setup);
 
         TempBlob.CreateOutStream(OutStr, TextEncoding::UTF8);
         OutStr.WriteText(PayloadTxt);

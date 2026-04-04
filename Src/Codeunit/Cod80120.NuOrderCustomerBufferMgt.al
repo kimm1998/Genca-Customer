@@ -34,19 +34,19 @@ codeunit 80120 "NuOrder Customer Buffer Mgt."
         Mgt.EnqueueCustomer(Rec."No.");
     end;
 
-    [EventSubscriber(ObjectType::Table, Database::"Ship-to Address", OnAfterInsertEvent, '', false, false)]
-    local procedure ShipToAddress_OnAfterInsert(var Rec: Record "Ship-to Address"; RunTrigger: Boolean)
-    var
-        Mgt: Codeunit "NuOrder Customer Buffer Mgt.";
-    begin
-        Mgt.EnqueueCustomer(Rec."Customer No.");
-    end;
+    // [EventSubscriber(ObjectType::Table, Database::"Ship-to Address", OnAfterInsertEvent, '', false, false)]
+    // local procedure ShipToAddress_OnAfterInsert(var Rec: Record "Ship-to Address"; RunTrigger: Boolean)
+    // var
+    //     Mgt: Codeunit "NuOrder Customer Buffer Mgt.";
+    // begin
+    //     Mgt.EnqueueCustomer(Rec."Customer No.");
+    // end;
 
-    [EventSubscriber(ObjectType::Table, Database::"Ship-to Address", OnAfterModifyEvent, '', false, false)]
-    local procedure ShipToAddress_OnAfterModify(var Rec: Record "Ship-to Address"; var xRec: Record "Ship-to Address"; RunTrigger: Boolean)
-    var
-        Mgt: Codeunit "NuOrder Customer Buffer Mgt.";
-    begin
-        Mgt.EnqueueCustomer(Rec."Customer No.");
-    end;
+    // [EventSubscriber(ObjectType::Table, Database::"Ship-to Address", OnAfterModifyEvent, '', false, false)]
+    // local procedure ShipToAddress_OnAfterModify(var Rec: Record "Ship-to Address"; var xRec: Record "Ship-to Address"; RunTrigger: Boolean)
+    // var
+    //     Mgt: Codeunit "NuOrder Customer Buffer Mgt.";
+    // begin
+    //     Mgt.EnqueueCustomer(Rec."Customer No.");
+    // end;
 }

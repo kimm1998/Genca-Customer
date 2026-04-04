@@ -1,6 +1,6 @@
 codeunit 80100 "NuORDER Auth Mgt"
 {
-    procedure Initiate(var Setup: Record "NuORDER Setup")
+    procedure Initiate(var Setup: Record "NuORDER Environment Setup")
     var
         ResponseTxt: Text;
         Tok: Text;
@@ -30,7 +30,7 @@ codeunit 80100 "NuORDER Auth Mgt"
           Setup."Application Name");
     end;
 
-    procedure ExchangeToken(var Setup: Record "NuORDER Setup"; Verifier: Text)
+    procedure ExchangeToken(var Setup: Record "NuORDER Environment Setup"; Verifier: Text)
     var
         ResponseTxt: Text;
         Tok: Text;
@@ -64,7 +64,7 @@ codeunit 80100 "NuORDER Auth Mgt"
     end;
 
     local procedure CallAuthEndpoint(
-        Setup: Record "NuORDER Setup";
+        Setup: Record "NuORDER Environment Setup";
         AuthType: Text;
         Token: Text;
         TokenSecret: Text;
@@ -81,7 +81,7 @@ codeunit 80100 "NuORDER Auth Mgt"
         case AuthType of
             'initiate':
                 begin
-                    Url := ParseURL(StrSubstNo(GetBaseUrlSafe(Setup), Setup.Env), Setup."Initiate URL");
+                    Url := ParseURL(StrSubstNo(GetBaseUrlSafe(Setup), Setup.Environment), 'initiate');
                     AuthHeader := BuildAuthHeader_PostmanStyle(
                         Setup,
                         'GET',
@@ -93,7 +93,7 @@ codeunit 80100 "NuORDER Auth Mgt"
                 end;
             'token':
                 begin
-                    Url := ParseURL(StrSubstNo(GetBaseUrlSafe(Setup), Setup.Env), Setup."Token URL");
+                    Url := ParseURL(StrSubstNo(GetBaseUrlSafe(Setup), Setup.Environment), 'token');
                     AuthHeader := BuildAuthHeader_PostmanStyle(
                         Setup,
                         'GET',
@@ -120,13 +120,13 @@ codeunit 80100 "NuORDER Auth Mgt"
         exit(ResponseTxt);
     end;
 
-    procedure GetBaseUrlSafe(Setup: Record "NuORDER Setup"): Text
+    procedure GetBaseUrlSafe(Setup: Record "NuORDER Environment Setup"): Text
     begin
         // If Base URL field is empty -> default to https://{env}.nuorder.com
         if Setup."Base URL" <> '' then
             exit(Setup."Base URL");
 
-        exit(StrSubstNo(Setup."Base URL", Format(Setup.Env)));
+        exit(StrSubstNo(Setup."Base URL", Format(Setup.Environment)));
     end;
 
 
@@ -144,31 +144,31 @@ codeunit 80100 "NuORDER Auth Mgt"
 
     procedure GetProductURL(): Text
     var
-        Setup: Record "NuORDER Setup";
+        Setup: Record "NuORDER Environment Setup";
         Url: Text;
     begin
         Setup.Get();
-        Url := ParseURL(StrSubstNo(GetBaseUrlSafe(Setup), Setup.Env), Setup."Product API URL");
+        Url := ParseURL(StrSubstNo(GetBaseUrlSafe(Setup), Setup.Environment), 'product/new/force');
         exit(Url);
     end;
 
     procedure GetCustomerURL(): Text
     var
-        Setup: Record "NuORDER Setup";
+        Setup: Record "NuORDER Environment Setup";
         Url: Text;
     begin
         Setup.Get();
-        Url := ParseURL(StrSubstNo(GetBaseUrlSafe(Setup), Setup.Env), Setup."Customer API URL");
+        Url := ParseURL(StrSubstNo(GetBaseUrlSafe(Setup), Setup.Environment), 'company/new/force');
         exit(Url);
     end;
 
     procedure GetPriceSheetURL(): Text
     var
-        Setup: Record "NuORDER Setup";
+        Setup: Record "NuORDER Environment Setup";//TODO fix all of these to get specific setup
         Url: Text;
     begin
         Setup.Get();
-        Url := ParseURL(StrSubstNo(GetBaseUrlSafe(Setup), Setup.Env), Setup."Price Sheet API URL");
+        Url := ParseURL(StrSubstNo(GetBaseUrlSafe(Setup), Setup.Environment), Setup."Price Sheet API URL");
         exit(Url);
     end;
 
@@ -176,7 +176,7 @@ codeunit 80100 "NuORDER Auth Mgt"
     // POSTMAN-STYLE HEADER CREATION
     // ============================
     local procedure BuildAuthHeader_PostmanStyle(
-        Setup: Record "NuORDER Setup";
+        Setup: Record "NuORDER Environment Setup";
         HttpMethod: Text;
         Endpoint: Text;
         Token: Text;
@@ -270,7 +270,7 @@ codeunit 80100 "NuORDER Auth Mgt"
     end;
 
 
-    procedure GetApiAuthorizationHeader(Setup: Record "NuORDER Setup"; HttpMethod: Text; FullUrl: Text): Text
+    procedure GetApiAuthorizationHeader(Setup: Record "NuORDER Environment Setup"; HttpMethod: Text; FullUrl: Text): Text
     begin
         Setup.TestField(Enabled, true);
         Setup.TestField("Consumer Key");

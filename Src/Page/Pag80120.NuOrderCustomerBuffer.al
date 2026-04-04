@@ -73,6 +73,7 @@ page 80120 "NuOrder Customer Buffer"
             }
         }
     }
+    
 
 
     local procedure ExportCurrentPayloadToTxt()

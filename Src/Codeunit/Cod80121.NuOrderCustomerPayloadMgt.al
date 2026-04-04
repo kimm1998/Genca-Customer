@@ -16,6 +16,7 @@ codeunit 80121 "NuOrder Customer Payload Mgt."
         Payload.Add('addresses', AddressesArr);
 
         Payload.Add('allow_bulk', false);
+        Payload.Add('phone', Customer."Phone No.");
         Payload.Add('surcharge', 0);
         Payload.Add('discount', 0);
         Payload.Add('currency_code', GetCurrencyCode(Customer));

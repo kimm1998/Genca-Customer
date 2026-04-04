@@ -3,37 +3,59 @@ codeunit 80101 "NuOrder Item Buffer Mgt."
     procedure EnqueueFromItem(ItemNo: Code[20])
     var
         Qry: Query "Item Color Season Query";
+        Setup: Record "NuORDER Environment Setup";
     begin
-        Qry.SetRange(Item_No, ItemNo);
-        InsertQueryResults(Qry);
+        Setup.SetRange(Enabled, true);
+        Setup.SetRange("Enable Product Sync", true);
+        Setup.SetRange("Auth Status", Setup."Auth Status"::Connected);
+        if Setup.FindSet() then
+            repeat
+                Qry.SetRange(Item_No, ItemNo);
+                InsertQueryResults(Setup, Qry);
+            until Setup.Next() = 0;
     end;
 
     procedure EnqueueFromItemColor(ItemNo: Code[20]; ColorCode: Code[20])
     var
         Qry: Query "Item Color Season Query";
+        Setup: Record "NuORDER Environment Setup";
     begin
-        Qry.SetRange(Item_No, ItemNo);
-        Qry.SetRange(Color_Code, ColorCode);
-        InsertQueryResults(Qry);
+        Setup.SetRange(Enabled, true);
+        Setup.SetRange("Enable Product Sync", true);
+        Setup.SetRange("Auth Status", Setup."Auth Status"::Connected);
+        if Setup.FindSet() then
+            repeat
+                Qry.SetRange(Item_No, ItemNo);
+                Qry.SetRange(Color_Code, ColorCode);
+                InsertQueryResults(Setup, Qry);
+            until Setup.Next() = 0;
     end;
 
     procedure EnqueueFromSeason(SeasonCode: Code[20])
     var
         Qry: Query "Item Color Season Query";
+        Setup: Record "NuORDER Environment Setup";
     begin
-        Qry.SetRange(Season_Code, SeasonCode);
-        InsertQueryResults(Qry);
+        Setup.SetRange(Enabled, true);
+        Setup.SetRange("Enable Product Sync", true);
+        Setup.SetRange("Auth Status", Setup."Auth Status"::Connected);
+        if Setup.FindSet() then
+            repeat
+                Qry.SetRange(Season_Code, SeasonCode);
+                InsertQueryResults(Setup, Qry);
+            until Setup.Next() = 0;
     end;
 
-    local procedure InsertQueryResults(var Qry: Query "Item Color Season Query")
+    local procedure InsertQueryResults(Setup: Record "NuORDER Environment Setup"; var Qry: Query "Item Color Season Query")
     var
         Buffer: Record "NuOrder Product Buffer";
     begin
         Qry.Open();
 
         while Qry.Read() do begin
-            if not Buffer.Get(Qry.Item_No, Qry.Color_Code, Qry.Season_Code) then begin
+            if not Buffer.Get(Setup.Code, Qry.Item_No, Qry.Color_Code, Qry.Season_Code) then begin
                 Buffer.Init();
+                Buffer."Environment Code" := Setup.Code;
                 Buffer."Item No." := Qry.Item_No;
                 Buffer."Color Code" := Qry.Color_Code;
                 Buffer."Season Code" := Qry.Season_Code;

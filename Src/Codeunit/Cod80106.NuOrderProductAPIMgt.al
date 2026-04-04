@@ -1,6 +1,6 @@
 codeunit 80106 "NuOrder Product API Mgt."
 {
-    procedure ProcessAllBufferedEntries()
+    trigger OnRun()
     var
         Buffer: Record "NuOrder Product Buffer";
     begin
@@ -22,7 +22,7 @@ codeunit 80106 "NuOrder Product API Mgt."
     [TryFunction]
     procedure PushCreateOrUpdateProduct(Buffer: Record "NuOrder Product Buffer"; var ResponseTxt: Text)
     var
-        Setup: Record "NuORDER Setup";
+        Setup: Record "NuORDER Environment Setup";
         AuthMgt: Codeunit "NuORDER Auth Mgt";
         PayloadMgt: Codeunit "NuOrder Product Payload Mgt.";
         Client: HttpClient;
@@ -38,10 +38,13 @@ codeunit 80106 "NuOrder Product API Mgt."
         Buffer.TestField("Item No.");
         Buffer.TestField("Color Code");
         Buffer.TestField("Season Code");
-        if not Setup.Get() then
+        if not Setup.Get(Buffer."Environment Code") then
             Error('NuORDER Setup was not found.');
+        Setup.TestField("Auth Status", Setup."Auth Status"::Connected);
+        Setup.TestField("Enable Product Sync", true);
+        Setup.TestField(Enabled, true);
 
-        PayloadTxt := PayloadMgt.BuildCreateOrUpdateProductPayload(Buffer);
+        PayloadTxt := PayloadMgt.BuildCreateOrUpdateProductPayload(Buffer, Setup);
 
         Url := AuthMgt.GetProductURL();
         AuthorizationHeader := AuthMgt.GetApiAuthorizationHeader(Setup, 'PUT', Url);
